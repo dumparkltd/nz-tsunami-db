@@ -124,39 +124,52 @@ define([
                                         ? record.getColumnValue(dateCol.specificityColumn)
                                         : 't';
                                       if (dateCol.minColumn && dateCol.maxColumn) {
-                                        minValue = new Date(
-                                          record.parseDate(
-                                            record.getColumnValue(dateCol.minColumn)
-                                          )
-                                        );
-                                        maxValue = new Date(
-                                          record.parseDate(
-                                            record.getColumnValue(dateCol.maxColumn)
-                                          )
-                                        );
-                                        if (specValue === 'y') {
-                                          minValue = minValue.getFullYear();
-                                          maxValue = maxValue.getFullYear();
-                                        } else if (specValue === 'm' || specValue === 'd' ) {
-                                          minValue = minValue.toLocaleDateString('en-NZ')
-                                          maxValue = maxValue.toLocaleDateString('en-NZ')
-                                        } else { // 't'
-                                          minValue = minValue.toLocaleString('en-NZ')
-                                          maxValue = maxValue.toLocaleString('en-NZ')
-                                        }
-                                        var res = memo.concat(
-                                          that.getAuxRangeColumnHTML(
-                                            dateCol.minColumn,
-                                            minValue,
-                                            maxValue,
-                                            dateCol.title
-                                          )
-                                        );
-                                        if (dateCol.certaintyColumn) {
-                                          res = res.concat(
-                                            that.getCertaintyColumnHtml(
-                                              dateCol.certaintyColumn,
-                                              '&mdash; ' + labels.record.certainty_title
+                                        var minVal = record.getColumnValue(dateCol.minColumn);
+                                        var maxVal = record.getColumnValue(dateCol.maxColumn);
+                                        if ((minVal && minVal.trim() !== '') || (maxVal && maxVal.trim() !== '')) {
+                                          minValue = new Date(
+                                            record.parseDate(
+                                              record.getColumnValue(dateCol.minColumn)
+                                            )
+                                          );
+                                          maxValue = new Date(
+                                            record.parseDate(
+                                              record.getColumnValue(dateCol.maxColumn)
+                                            )
+                                          );
+                                          if (specValue === 'y') {
+                                            minValue = minValue.getFullYear();
+                                            maxValue = maxValue.getFullYear();
+                                          } else if (specValue === 'm' || specValue === 'd' ) {
+                                            minValue = minValue.toLocaleDateString('en-NZ')
+                                            maxValue = maxValue.toLocaleDateString('en-NZ')
+                                          } else { // 't'
+                                            minValue = minValue.toLocaleString('en-NZ')
+                                            maxValue = maxValue.toLocaleString('en-NZ')
+                                          }
+                                          var res = memo.concat(
+                                            that.getAuxRangeColumnHTML(
+                                              dateCol.minColumn,
+                                              minValue,
+                                              maxValue,
+                                              dateCol.title
+                                            )
+                                          );
+                                          if (dateCol.certaintyColumn) {
+                                            res = res.concat(
+                                              that.getCertaintyColumnHtml(
+                                                dateCol.certaintyColumn,
+                                                '&mdash; ' + labels.record.certainty_title
+                                              )
+                                            );
+                                          }
+                                        } else {
+                                          res = memo.concat(
+                                            that.getAuxRangeColumnHTML(
+                                              dateCol.minColumn,
+                                              null,
+                                              null,
+                                              dateCol.title
                                             )
                                           );
                                         }
@@ -290,12 +303,21 @@ define([
     },
     getAuxRangeColumnHTML:function(id, minValue, maxValue, title){
       var labels = this.model.getLabels();
-      return _.template(templateColumnTextSecondary)({
-        t:labels,
-        title: title || labels.record.comment,
-        value:minValue === maxValue ? minValue : minValue + ' - ' + maxValue,
-        id:id
-      })
+      if (minValue) {
+        return _.template(templateColumnTextSecondary)({
+          t:labels,
+          title: title || labels.record.comment,
+          value: (maxValue && minValue === maxValue) ? minValue : minValue + ' - ' + maxValue,
+          id:id
+        })
+      } else {
+        return _.template(templateColumnTextSecondary)({
+          t:labels,
+          title: title || labels.record.comment,
+          value: '&mdash; ',
+          id:id
+        })
+      }
     },
     getCertaintyColumnHtml:function(certCol, title){
       var record = this.model.get("record")
